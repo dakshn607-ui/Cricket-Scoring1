@@ -31,15 +31,18 @@ let D={players:[],matches:[]},admin=false,tab="stats",curId=null,setup=null,ref=
 const $=s=>document.getElementById(s),uid=()=>Math.random().toString(36).slice(2,9);
 const pn=id=>(D.players.find(p=>p.id===id)||{name:"?"}).name;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-async function save(){render();if(ref){try{await ref.set(JSON.parse(JSON.stringify(D)))}catch(e){console.error(e)}}}
-(async()=>{try{const db=await claude.use("db");if(db){ref=db.doc("app/data");dbOk=true;
- ref.onSnapshot(s=>{if(s.exists){D=JSON.parse(JSON.stringify(s.data()));D.players=D.players||[];D.matches=D.matches||[];render()}},e=>console.error(e))}}catch(e){console.error(e)}render()})();
+function save(){render();try{localStorage.setItem("cricketData",JSON.stringify(D))}catch(e){}}
+(async()=>{let got=false;try{const d=localStorage.getItem("cricketData");if(d){D=JSON.parse(d);got=true}}catch(e){}
+ if(!got){try{const r=await fetch("data.json?"+Date.now());if(r.ok){D=await r.json();D.players=D.players||[];D.matches=D.matches||[]}}catch(e){}}
+ render()})();
+function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,1)],{type:"application/json"}));a.download="data.json";a.click()}
+function resetLocal(){if(confirm("Discard changes in this browser and reload the published data.json?")){try{localStorage.removeItem("cricketData")}catch(e){}location.reload()}}
 
 function render(){
  const t=[["stats","Player Stats"],["matches","Matches"]];if(admin)t.push(["players","Players"],["new","New Match"]);
  $("nav").innerHTML=t.map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+
   `<button onclick="${admin?"logout()":"login()"}">${admin?"Log out":"Admin login"}</button>`;
- $("app").innerHTML=(!dbOk?`<div class="card mu">Saving is local only right now (shared storage unavailable) — data is lost on refresh.</div>`:"")+
+ $("app").innerHTML=(admin?`<div class="card mu">Changes are saved in this browser only. When you are done, press Export, upload the downloaded <b>data.json</b> to your GitHub repo (replace the old one) and everyone will see it. <div class="row"><button class="p" onclick="exportData()">Export data.json</button><button class="d" onclick="resetLocal()">Discard local changes</button></div></div>`:"")+
   ({stats:vStats,matches:vMatches,players:vPlayers,new:vNew,match:vMatch,login:vLogin}[tab]||vStats)();
 }
 function go(t,id){tab=t;if(id)curId=id;if(t==="new"&&!setup)setup={type:"limited",overs:20,a:"Team A",b:"Team B",A:[],B:[],first:0};render()}
