@@ -112,7 +112,7 @@ function vMatch(){
   const ob=bt.p.filter(p=>!(i.bt[p]&&i.bt[p].out)),sel=(k,list,ex)=>`<select onchange="pick('${k}',this.value)"><option value="">${k==="bl"?"Bowler":k==="st"?"Striker":"Non-striker"}…</option>${list.filter(p=>p!==ex).map(p=>`<option value="${p}" ${i[k]===p?"selected":""}>${esc(pn(p))}</option>`).join("")}</select>`;
   h+=`<div class="card"><div class="row">${sel("st",ob,i.ns)}${sel("ns",ob,i.st)}${sel("bl",bo.p,i.last)}</div>
   <div class="pad">${[0,1,2,3,4,6].map(r=>`<button onclick="ball(${r})">${r}</button>`).join("")}<button onclick="ball(0,'wd')">Wide</button><button onclick="ball(0,'nb')">No ball</button>
-  <button class="d" onclick="ball(0,'',1)">Wicket</button><button onclick="undo()">Undo</button></div>
+  <button class="d" onclick="ball(0,'',1)">Wicket</button><button class="d" onclick="ball(6,'',1)">Six &amp; out</button><button onclick="undo()">Undo</button></div>
   <div class="mu" style="margin-top:6px">Wide and No ball each add 1 run and don't count as a legal delivery.</div></div>`}
  if(live&&(i.done||m.type==="test")){
   h+=`<div class="card"><div class="row">${m.type==="test"&&!i.done?`<button onclick="endInn()">End innings</button>`:""}
@@ -131,7 +131,7 @@ function ball(r,ex,w){
  hist.push(JSON.stringify(i));const b=i.bt[i.st],q=i.bw[i.bl];let lb=String(r);
  if(ex){i.runs+=1+r;q.r+=1+r;lb=ex==="wd"?"Wd":"Nb";if(ex==="nb"){b.b++}}
  else{i.balls++;q.b++;b.b++;b.r+=r;i.runs+=r;q.r+=r;if(r===4)b.f++;if(r===6)b.s++;
-  if(w){b.out=true;i.wk++;q.w++;lb="W";i.st=null}}
+  if(w){b.out=true;i.wk++;q.w++;lb=r===6?"6W":"W";i.st=null}}
  if(!w&&r%2===1)[i.st,i.ns]=[i.ns,i.st];
  if(!ex&&i.balls%6===0){[i.st,i.ns]=[i.ns,i.st];i.last=i.bl;i.bl=null}
  i.log.push(lb);
