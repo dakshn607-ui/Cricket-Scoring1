@@ -1,120 +1,6 @@
 {
  "matches": [
   {
-   "id": "gzeem4k",
-   "inn": [
-    {
-     "balls": 6,
-     "bat": 0,
-     "bl": null,
-     "bt": {
-      "p9ph6l4": {
-       "b": 6,
-       "f": 0,
-       "out": false,
-       "r": 24,
-       "s": 4
-      },
-      "s2am8dw": {
-       "b": 0,
-       "f": 0,
-       "out": false,
-       "r": 0,
-       "s": 0
-      }
-     },
-     "bw": {
-      "xb8ur0u": {
-       "b": 6,
-       "r": 24,
-       "w": 0
-      }
-     },
-     "done": false,
-     "last": "xb8ur0u",
-     "log": [
-      "0",
-      "0",
-      "6",
-      "6",
-      "6",
-      "6"
-     ],
-     "ns": "p9ph6l4",
-     "runs": 24,
-     "st": "s2am8dw",
-     "wk": 0
-    }
-   ],
-   "overs": 0,
-   "result": "",
-   "status": "live",
-   "t": [
-    {
-     "name": "Team A",
-     "p": [
-      "p9ph6l4",
-      "s2am8dw",
-      "e13x5zs"
-     ]
-    },
-    {
-     "name": "Team B",
-     "p": [
-      "xb8ur0u",
-      "kukby9c"
-     ]
-    }
-   ],
-   "type": "test"
-  },
-  {
-   "id": "gaqnhot",
-   "type": "test",
-   "overs": 0,
-   "t": [
-    {
-     "name": "Daksh's team",
-     "p": [
-      "p9ph6l4",
-      "h9iaeta",
-      "w8s5eng",
-      "97jk34r",
-      "qof4mw4"
-     ]
-    },
-    {
-     "name": "Agastya's Team",
-     "p": [
-      "e13x5zs",
-      "kukby9c",
-      "xb8ur0u",
-      "p3wh7p2",
-      "e5j9f1h",
-      "sblqe8f",
-      "06movgf"
-     ]
-    }
-   ],
-   "inn": [
-    {
-     "bat": 0,
-     "runs": 0,
-     "balls": 0,
-     "wk": 0,
-     "bt": {},
-     "bw": {},
-     "st": null,
-     "ns": null,
-     "bl": null,
-     "log": [],
-     "done": false
-    }
-   ],
-   "status": "live",
-   "result": ""
-  },
-  {
    "id": "daijk1i",
    "type": "test",
    "overs": 0,
@@ -696,71 +582,8 @@
      "last": "w8s5eng"
     }
    ],
-   "status": "live",
-   "result": ""
-  },
-  {
-   "id": "kfi1wol",
-   "type": "limited",
-   "overs": 5,
-   "t": [
-    {
-     "name": "Team Daksh",
-     "p": [
-      "p9ph6l4",
-      "qof4mw4",
-      "w8s5eng",
-      "8gmfz8y"
-     ]
-    },
-    {
-     "name": "Team Ishan",
-     "p": [
-      "xb8ur0u",
-      "06movgf",
-      "p3wh7p2",
-      "e5j9f1h"
-     ]
-    }
-   ],
-   "inn": [
-    {
-     "bat": 0,
-     "runs": 0,
-     "balls": 0,
-     "wk": 0,
-     "bt": {
-      "p9ph6l4": {
-       "r": 0,
-       "b": 0,
-       "f": 0,
-       "s": 0,
-       "out": false
-      },
-      "qof4mw4": {
-       "r": 0,
-       "b": 0,
-       "f": 0,
-       "s": 0,
-       "out": false
-      }
-     },
-     "bw": {
-      "p3wh7p2": {
-       "b": 0,
-       "r": 0,
-       "w": 0
-      }
-     },
-     "st": "p9ph6l4",
-     "ns": "qof4mw4",
-     "bl": "p3wh7p2",
-     "log": [],
-     "done": false
-    }
-   ],
-   "status": "live",
-   "result": ""
+   "status": "done",
+   "result": "AGASTYA won by 2 runs"
   },
   {
    "id": "ox7ywe8",
@@ -952,134 +775,6 @@
      ],
      "done": true,
      "last": "p9ph6l4"
-    }
-   ],
-   "status": "live",
-   "result": ""
-  },
-  {
-   "id": "l40y5sp",
-   "type": "test",
-   "overs": 0,
-   "t": [
-    {
-     "name": "Team Ishaan",
-     "p": [
-      "p9ph6l4",
-      "p3wh7p2",
-      "mppa7me",
-      "sblqe8f",
-      "pxz83mv",
-      "w8s5eng"
-     ]
-    },
-    {
-     "name": "Team Ayden",
-     "p": [
-      "qof4mw4",
-      "xb8ur0u",
-      "aqfex9o",
-      "e13x5zs",
-      "06movgf",
-      "e5j9f1h"
-     ]
-    }
-   ],
-   "inn": [
-    {
-     "bat": 1,
-     "runs": 0,
-     "balls": 0,
-     "wk": 0,
-     "bt": {
-      "e13x5zs": {
-       "r": 0,
-       "b": 0,
-       "f": 0,
-       "s": 0,
-       "out": false
-      },
-      "qof4mw4": {
-       "r": 0,
-       "b": 0,
-       "f": 0,
-       "s": 0,
-       "out": false
-      },
-      "06movgf": {
-       "r": 0,
-       "b": 0,
-       "f": 0,
-       "s": 0,
-       "out": false
-      }
-     },
-     "bw": {
-      "mppa7me": {
-       "b": 0,
-       "r": 0,
-       "w": 0
-      }
-     },
-     "st": "qof4mw4",
-     "ns": "06movgf",
-     "bl": "mppa7me",
-     "log": [],
-     "done": false
-    }
-   ],
-   "status": "live",
-   "result": ""
-  },
-  {
-   "id": "grqwxag",
-   "type": "test",
-   "overs": 0,
-   "t": [
-    {
-     "name": "Team Ishaan",
-     "p": [
-      "p9ph6l4",
-      "p3wh7p2",
-      "sblqe8f",
-      "pxz83mv",
-      "mppa7me",
-      "aqfex9o"
-     ]
-    },
-    {
-     "name": "Team Agastya",
-     "p": [
-      "e13x5zs",
-      "xb8ur0u",
-      "w8s5eng",
-      "e5j9f1h",
-      "qof4mw4",
-      "06movgf"
-     ]
-    }
-   ],
-   "inn": [
-    {
-     "bat": 0,
-     "runs": 0,
-     "balls": 0,
-     "wk": 0,
-     "bt": {
-      "p3wh7p2": {
-       "r": 0,
-       "b": 0,
-       "f": 0,
-       "s": 0,
-       "out": false
-      }
-     },
-     "bw": {},
-     "st": "p3wh7p2",
-     "ns": null,
-     "bl": null,
-     "log": [],
-     "done": false
     }
    ],
    "status": "live",
@@ -1365,129 +1060,129 @@
  ],
  "players": [
   {
-   "b": 0,
-   "bb": 0,
-   "f": 0,
+   "b": 29,
+   "bb": 36,
+   "f": 4,
    "id": "p9ph6l4",
-   "m": 0,
+   "m": 1,
    "name": "Daksh",
-   "o": 0,
-   "r": 0,
-   "rc": 0,
-   "s": 0,
-   "w": 0
+   "o": 1,
+   "r": 49,
+   "rc": 29,
+   "s": 4,
+   "w": 5
   },
   {
-   "b": 0,
+   "b": 9,
    "bb": 0,
-   "f": 0,
+   "f": 1,
    "id": "s2am8dw",
-   "m": 0,
+   "m": 1,
    "name": "Atharva",
    "o": 0,
-   "r": 0,
+   "r": 4,
    "rc": 0,
    "s": 0,
    "w": 0
   },
   {
-   "b": 0,
-   "bb": 0,
+   "b": 19,
+   "bb": 24,
    "f": 0,
    "id": "e13x5zs",
-   "m": 0,
+   "m": 1,
    "name": "Parth",
-   "o": 0,
-   "r": 0,
-   "rc": 0,
+   "o": 2,
+   "r": 7,
+   "rc": 21,
    "s": 0,
-   "w": 0
+   "w": 2
   },
   {
-   "b": 0,
+   "b": 22,
    "bb": 0,
-   "f": 0,
+   "f": 1,
    "id": "kukby9c",
-   "m": 0,
+   "m": 1,
    "name": "Parthik",
-   "o": 0,
-   "r": 0,
+   "o": 1,
+   "r": 27,
    "rc": 0,
-   "s": 0,
+   "s": 2,
    "w": 0
   },
   {
-   "b": 0,
-   "bb": 0,
+   "b": 13,
+   "bb": 31,
    "f": 0,
    "id": "xb8ur0u",
-   "m": 0,
+   "m": 1,
    "name": "Agastya",
-   "o": 0,
-   "r": 0,
-   "rc": 0,
-   "s": 0,
-   "w": 0
+   "o": 1,
+   "r": 25,
+   "rc": 36,
+   "s": 2,
+   "w": 4
   },
   {
-   "b": 0,
-   "bb": 0,
+   "b": 32,
+   "bb": 6,
    "f": 0,
    "id": "h9iaeta",
-   "m": 0,
+   "m": 1,
    "name": "Johan",
    "o": 0,
-   "r": 0,
-   "rc": 0,
+   "r": 8,
+   "rc": 9,
    "s": 0,
-   "w": 0
+   "w": 1
   },
   {
-   "b": 0,
-   "bb": 0,
-   "f": 0,
+   "b": 18,
+   "bb": 6,
+   "f": 1,
    "id": "p3wh7p2",
-   "m": 0,
+   "m": 1,
    "name": "Ishaan",
-   "o": 0,
-   "r": 0,
+   "o": 1,
+   "r": 25,
    "rc": 0,
-   "s": 0,
+   "s": 2,
    "w": 0
   },
   {
-   "b": 0,
-   "bb": 0,
-   "f": 0,
+   "b": 6,
+   "bb": 6,
+   "f": 1,
    "id": "w8s5eng",
-   "m": 0,
+   "m": 1,
    "name": "Aresh",
-   "o": 0,
-   "r": 0,
-   "rc": 0,
-   "s": 0,
+   "o": 2,
+   "r": 10,
+   "rc": 18,
+   "s": 1,
    "w": 0
   },
   {
    "id": "e5j9f1h",
    "name": "Sid",
-   "m": 0,
-   "r": 0,
-   "b": 0,
-   "o": 0,
-   "f": 0,
+   "m": 1,
+   "r": 9,
+   "b": 6,
+   "o": 1,
+   "f": 1,
    "s": 0,
    "w": 0,
-   "bb": 0,
-   "rc": 0
+   "bb": 6,
+   "rc": 1
   },
   {
    "id": "97jk34r",
    "name": "Rishabh",
-   "m": 0,
+   "m": 1,
    "r": 0,
-   "b": 0,
-   "o": 0,
+   "b": 2,
+   "o": 2,
    "f": 0,
    "s": 0,
    "w": 0,
@@ -1497,7 +1192,7 @@
   {
    "id": "sblqe8f",
    "name": "Himank",
-   "m": 0,
+   "m": 1,
    "r": 0,
    "b": 0,
    "o": 0,
@@ -1510,54 +1205,54 @@
   {
    "id": "qof4mw4",
    "name": "Ayden",
-   "m": 0,
+   "m": 1,
    "r": 0,
-   "b": 0,
-   "o": 0,
+   "b": 3,
+   "o": 1,
    "f": 0,
    "s": 0,
    "w": 0,
-   "bb": 0,
-   "rc": 0
+   "bb": 12,
+   "rc": 18
   },
   {
    "id": "06movgf",
    "name": "Shashwat",
-   "m": 0,
-   "r": 0,
-   "b": 0,
-   "o": 0,
-   "f": 0,
+   "m": 1,
+   "r": 4,
+   "b": 10,
+   "o": 2,
+   "f": 1,
    "s": 0,
-   "w": 0,
-   "bb": 0,
-   "rc": 0
+   "w": 3,
+   "bb": 30,
+   "rc": 53
   },
   {
    "id": "mppa7me",
    "name": "Avneesh",
-   "m": 0,
-   "r": 0,
-   "b": 0,
-   "o": 0,
-   "f": 0,
+   "m": 1,
+   "r": 4,
+   "b": 9,
+   "o": 2,
+   "f": 1,
    "s": 0,
-   "w": 0,
-   "bb": 0,
+   "w": 1,
+   "bb": 6,
    "rc": 0
   },
   {
    "id": "8gmfz8y",
    "name": "Ishaan in Daksh Team",
-   "m": 0,
-   "r": 0,
-   "b": 0,
-   "o": 0,
+   "m": 1,
+   "r": 33,
+   "b": 20,
+   "o": 1,
    "f": 0,
-   "s": 0,
-   "w": 0,
-   "bb": 0,
-   "rc": 0
+   "s": 1,
+   "w": 1,
+   "bb": 30,
+   "rc": 39
   },
   {
    "id": "aqfex9o",
