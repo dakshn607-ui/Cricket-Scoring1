@@ -65,7 +65,7 @@ function vMatches(){
  <span class="pill ${m.status==="live"?"live":""}">${m.status==="live"?"LIVE":"Final"}</span><span class="pill">${m.type==="test"?"Test":m.overs+" overs"}</span></div>
  ${m.inn.map(i=>`<div>${esc(m.t[i.bat].name)}: <b>${i.runs}/${i.wk}</b> <span class="mu">(${ov(i.balls)} ov)</span></div>`).join("")}
  ${m.result?`<div style="margin-top:6px"><b>${esc(m.result)}</b></div>`:""}
- <div class="row"><button onclick="go('match','${m.id}')">${admin&&m.status==="live"?"Score match":"Scorecard"}</button></div></div>`).join("")}
+ <div class="row"><button onclick="go('match','${m.id}')">${admin&&m.status==="live"?"Score match":"Scorecard"}</button>${admin?`<button class="d" onclick="delM('${m.id}')">Delete match</button>`:""}</div></div>`).join("")}
 const ov=b=>Math.floor(b/6)+"."+b%6;
 
 /* ---------- players ---------- */
@@ -101,7 +101,7 @@ const cm=()=>D.matches.find(m=>m.id===curId);
 function vMatch(){
  const m=cm();if(!m)return vMatches();
  const live=admin&&m.status==="live",i=m.inn[m.inn.length-1],bt=m.t[i.bat],bo=m.t[1-i.bat];
- let h=`<div class="card"><div class="row"><b>${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</b><span class="pill">${m.type==="test"?"Test":m.overs+" overs"}</span></div>`;
+ let h=`<div class="card"><div class="row"><b>${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</b><span class="pill">${m.type==="test"?"Test":m.overs+" overs"}</span>${admin?`<button class="d" onclick="delM('${m.id}')">Delete match</button>`:""}</div>`;
  if(m.result)h+=`<div><b>${esc(m.result)}</b></div>`;
  if(m.status==="live"){
   h+=`<div class="mu">Innings ${m.inn.length}: ${esc(bt.name)} batting</div><div class="big">${i.runs}/${i.wk} <span class="mu" style="font-size:16px">(${ov(i.balls)}${m.overs?" / "+m.overs:""} ov)</span></div>`;
@@ -124,6 +124,13 @@ function vMatch(){
   `</table><table style="margin-top:10px"><tr><th>Bowler (${esc(b.name)})</th><th>O</th><th>R</th><th>W</th></tr>`+
   Object.keys(x.bw).map(p=>{const q=x.bw[p];return `<tr><td>${esc(pn(p))}</td><td>${ov(q.b)}</td><td>${q.r}</td><td>${q.w}</td></tr>`}).join("")+`</table></div>`});
  return h}
+function delM(id){const m=D.matches.find(x=>x.id===id);if(!m||!confirm("Delete this match? This can't be undone."))return;
+ if(m.status==="done"&&confirm("Also remove this match's runs, wickets and games from the player stats?\n\nOK = remove them, Cancel = keep the stats as they are.")){
+  const P=id=>D.players.find(x=>x.id===id),sub=(p,k,v)=>p[k]=Math.max(0,p[k]-v);
+  m.t.forEach(t=>t.p.forEach(id=>{const p=P(id);if(p)sub(p,"m",1)}));
+  m.inn.forEach(i=>{Object.entries(i.bt).forEach(([id,q])=>{const p=P(id);if(p){sub(p,"r",q.r);sub(p,"b",q.b);sub(p,"f",q.f);sub(p,"s",q.s);if(q.out)sub(p,"o",1)}});
+   Object.entries(i.bw).forEach(([id,q])=>{const p=P(id);if(p){sub(p,"w",q.w);sub(p,"bb",q.b);sub(p,"rc",q.r)}})})}
+ D.matches=D.matches.filter(x=>x.id!==id);if(curId===id){curId=null;tab="matches"}save()}
 function pick(k,v){const i=lastInn();i[k]=v||null;if(k==="st"&&v)i.bt[v]=i.bt[v]||{r:0,b:0,f:0,s:0,out:false};if(k==="ns"&&v)i.bt[v]=i.bt[v]||{r:0,b:0,f:0,s:0,out:false};if(k==="bl"&&v)i.bw[v]=i.bw[v]||{b:0,r:0,w:0};save()}
 function lastInn(){const m=cm();return m.inn[m.inn.length-1]}
 function ball(r,ex,w){
