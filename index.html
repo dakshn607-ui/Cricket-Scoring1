@@ -51,8 +51,8 @@ function resetLocal(){if(confirm("Discard changes in this browser and reload the
 function render(){
  const t=[["stats","Player Stats"],["matches","Matches"]];if(admin)t.push(["players","Players"],["new","New Match"]);
  $("nav").innerHTML=t.map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+
-  `<button onclick="${admin?"logout()":"login()"}">${admin?"Log out":"Admin login"}</button>`;
- $("app").innerHTML=(admin?(DB?`<div class="card mu">Autosave is on. <span id="st">${status}</span> <button onclick="save()">Save now</button></div>`:`<div class="card mu">Changes are saved in this browser only. When you are done, press Export, upload the downloaded <b>data.json</b> to your GitHub repo (replace the old one) and everyone will see it. <div class="row"><button class="p" onclick="exportData()">Export data.json</button><button class="d" onclick="resetLocal()">Discard local changes</button></div></div>`):"")+
+  (admin?`<button onclick="exportData()">⬇ Export data.json</button>`:"")+`<button onclick="${admin?"logout()":"login()"}">${admin?"Log out":"Admin login"}</button>`;
+ $("app").innerHTML=(admin?(DB?`<div class="card mu">Autosave is on. <span id="st">${status}</span> <button onclick="save()">Save now</button> <button onclick="exportData()">Export data.json</button></div>`:`<div class="card mu">Changes are saved in this browser only. When you are done, press Export, upload the downloaded <b>data.json</b> to your GitHub repo (replace the old one) and everyone will see it. <div class="row"><button class="p" onclick="exportData()">Export data.json</button><button class="d" onclick="resetLocal()">Discard local changes</button></div></div>`):"")+
   ({stats:vStats,matches:vMatches,players:vPlayers,new:vNew,match:vMatch,login:vLogin}[tab]||vStats)();
 }
 function go(t,id){tab=t;if(id)curId=id;if(t==="new"&&!setup)setup={type:"limited",overs:20,a:"Team A",b:"Team B",A:[],B:[],first:0};render()}
@@ -119,6 +119,7 @@ function vMatch(){
  if(m.status==="live"){
   h+=`<div class="mu">Innings ${m.inn.length}: ${esc(bt.name)} batting</div><div class="big">${i.runs}/${i.wk} <span class="mu" style="font-size:16px">(${ov(i.balls)}${m.overs?" / "+m.overs:""} ov)</span></div>`;
   h+=`<div class="mu">Current run rate: <b>${i.balls?(i.runs*6/i.balls).toFixed(2):"0.00"}</b></div>`;
+  if(m.type==="test"&&m.inn.length>1){const my=m.inn.filter(x=>x.bat===i.bat).reduce((a,x)=>a+x.runs,0),op=m.inn.filter(x=>x.bat!==i.bat).reduce((a,x)=>a+x.runs,0),d=my-op;h+=`<div><b>${d<0?"Trailing by "+(-d):"Leading by "+d}</b></div>`}
   if(m.type==="limited"&&m.inn.length===2){const tg=m.inn[0].runs+1-i.runs,rem=m.overs*6-i.balls;h+=`<div class="mu">${tg<=0?"Target reached":rem>0?`Need ${tg} from ${rem} balls · Required run rate: <b>${(tg*6/rem).toFixed(2)}</b>`:`Needed ${tg} more`}</div>`}
   h+=`<div class="mu">This over${i.co?` (${esc(pn(i.co.bl))}): ${i.co.r} runs, ${i.co.w} wkts`:""}</div><div>${(i.co?i.co.l:[]).map(x=>`<span class="ball">${x}</span>`).join("")||`<span class="mu">New over</span>`}</div><div class="mu">Partnership: <b>${i.pr||0}</b> (${i.pb||0} balls)</div>`}
  h+=`</div>`;
@@ -213,7 +214,8 @@ function fin(m){if(m.pom===undefined)m.pom=suggest(m);const pp=D.players.find(x=
 function endM(){
  const m=cm();m.pom=$("pom")?$("pom").value:suggest(m);endPick=0;
  const tot=[0,0];m.inn.forEach(i=>tot[i.bat]+=i.runs);const L=m.inn[m.inn.length-1];
- if(tot[0]===tot[1])m.result=m.type==="test"?"Match drawn":"Match tied";
+ if(m.inn.length<2||m.inn[1].balls===0)m.result="No result";
+ else if(tot[0]===tot[1])m.result=m.type==="test"?"Match drawn":"Match tied";
  else{const w=tot[0]>tot[1]?0:1;m.result=`${m.t[w].name} won by `+(L.bat===w&&m.inn.length>1&&L.done&&L.runs>m.inn[m.inn.length-2].runs&&m.type==="limited"?`${wl(m,L)-L.wk} wickets`:`${Math.abs(tot[0]-tot[1])} runs`)}
  fin(m)}
 </script></body></html>
