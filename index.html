@@ -27,14 +27,24 @@ input[type=number]{width:70px}.kv{display:flex;justify-content:space-between;pad
 <main id="app"></main>
 <script>
 const USER="holiday",PASS="holiday123";
+/* Paste your Firebase Realtime Database URL between the quotes, e.g. "https://my-cricket-default-rtdb.firebaseio.com" */
+const DB_URL="";
+const DB=DB_URL.replace(/\/$/,"");let status="",lastSave=0,endPick=0;
 let D={players:[],matches:[]},admin=false,tab="stats",curId=null,setup=null,ref=null,hist=[],dbOk=false,nbMode=false,wkMode=0;
 const $=s=>document.getElementById(s),uid=()=>Math.random().toString(36).slice(2,9);
 const pn=id=>(D.players.find(p=>p.id===id)||{name:"?"}).name;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function save(){render();try{localStorage.setItem("cricketData",JSON.stringify(D))}catch(e){}}
-(async()=>{let got=false;try{const d=localStorage.getItem("cricketData");if(d){D=JSON.parse(d);got=true}}catch(e){}
- if(!got){try{const r=await fetch("data.json?"+Date.now());if(r.ok){D=await r.json();D.players=D.players||[];D.matches=D.matches||[]}}catch(e){}}
+function norm(d){d=d||{};d.players=d.players||[];d.players.forEach(p=>["md","du","t30","t50","pm","hs","bfw","bfr"].forEach(k=>p[k]=p[k]||0));d.matches=d.matches||[];d.matches.forEach(m=>{m.t.forEach(t=>t.p=t.p||[]);m.inn=m.inn||[];m.inn.forEach(i=>{i.log=i.log||[];i.bt=i.bt||{};i.bw=i.bw||{}})});best(d);return d}
+function setSt(t){status=t;const e=document.getElementById("st");if(e)e.textContent=t}
+function save(){D.v=(D.v||0)+1;lastSave=Date.now();render();try{localStorage.setItem("cricketData",JSON.stringify(D))}catch(e){}
+ if(DB){setSt("Saving...");fetch(DB+"/cricket.json",{method:"PUT",body:JSON.stringify(D)}).then(r=>setSt(r.ok?"Saved - everyone can see it":"Save failed ("+r.status+"). Check your database rules.")).catch(()=>setSt("Save failed - no connection"))}}
+(async()=>{let got=false;
+ if(DB){try{const r=await fetch(DB+"/cricket.json");const d=await r.json();if(d){D=norm(d);got=true}}catch(e){}}
+ if(!got){try{const d=localStorage.getItem("cricketData");if(d){D=norm(JSON.parse(d));got=true}}catch(e){}}
+ if(!got){try{const r=await fetch("data.json?"+Date.now());if(r.ok)D=norm(await r.json())}catch(e){}}
  render()})();
+setInterval(async()=>{if(!DB||Date.now()-lastSave<5000)return;const a=document.activeElement;if(a&&["INPUT","SELECT","TEXTAREA"].includes(a.tagName))return;
+ try{const r=await fetch(DB+"/cricket.json");const d=await r.json();if(d&&(d.v||0)>(D.v||0)){D=norm(d);render()}}catch(e){}},4000);
 function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,1)],{type:"application/json"}));a.download="data.json";a.click()}
 function resetLocal(){if(confirm("Discard changes in this browser and reload the published data.json?")){try{localStorage.removeItem("cricketData")}catch(e){}location.reload()}}
 
@@ -42,7 +52,7 @@ function render(){
  const t=[["stats","Player Stats"],["matches","Matches"]];if(admin)t.push(["players","Players"],["new","New Match"]);
  $("nav").innerHTML=t.map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+
   `<button onclick="${admin?"logout()":"login()"}">${admin?"Log out":"Admin login"}</button>`;
- $("app").innerHTML=(admin?`<div class="card mu">Changes are saved in this browser only. When you are done, press Export, upload the downloaded <b>data.json</b> to your GitHub repo (replace the old one) and everyone will see it. <div class="row"><button class="p" onclick="exportData()">Export data.json</button><button class="d" onclick="resetLocal()">Discard local changes</button></div></div>`:"")+
+ $("app").innerHTML=(admin?(DB?`<div class="card mu">Autosave is on. <span id="st">${status}</span> <button onclick="save()">Save now</button></div>`:`<div class="card mu">Changes are saved in this browser only. When you are done, press Export, upload the downloaded <b>data.json</b> to your GitHub repo (replace the old one) and everyone will see it. <div class="row"><button class="p" onclick="exportData()">Export data.json</button><button class="d" onclick="resetLocal()">Discard local changes</button></div></div>`):"")+
   ({stats:vStats,matches:vMatches,players:vPlayers,new:vNew,match:vMatch,login:vLogin}[tab]||vStats)();
 }
 function go(t,id){tab=t;if(id)curId=id;if(t==="new"&&!setup)setup={type:"limited",overs:20,a:"Team A",b:"Team B",A:[],B:[],first:0};render()}
@@ -56,26 +66,26 @@ function vStats(){
  const ps=[...D.players].sort((a,b)=>b.r-a.r);
  if(!ps.length)return `<div class="card">No players yet.${admin?"":" An admin can add players after logging in."}</div>`;
  const f=(a,b,d=2)=>b?(a/b).toFixed(d):"-",n=x=>x||0,kv=(l,v)=>`<div class="kv"><span class="mu">${l}</span><b>${v}</b></div>`;
- return ps.map(p=>`<div class="card"><div class="row"><b style="font-size:17px">${esc(p.name)}</b><span class="pill">${p.m} matches</span></div><div class="cols">
- <div><h2>🏏 Batting</h2>${kv("Runs",p.r)}${kv("Balls faced",p.b)}${kv("Average",f(p.r,p.o))}${kv("Strike rate",f(p.r*100,p.b,1))}${kv("Ducks",n(p.du))}${kv("Fours",p.f)}${kv("Sixes",p.s)}${kv("30s",n(p.t30))}${kv("50s",n(p.t50))}</div>
- <div><h2>🎯 Bowling</h2>${kv("Overs bowled",ov(p.bb))}${kv("Runs conceded",p.rc)}${kv("Maidens",n(p.md))}${kv("Wickets",p.w)}${kv("Economy",f(p.rc*6,p.bb))}</div></div></div>`).join("")}
+ return leader(ps)+ps.map(p=>`<div class="card"><div class="row"><b style="font-size:17px">${esc(p.name)}</b><span class="pill">${p.m} matches</span><span class="pill">${n(p.pm)} player of the match</span></div><div class="cols">
+ <div><h2>🏏 Batting</h2>${kv("Runs",p.r)}${kv("Balls faced",p.b)}${kv("Average",f(p.r,p.o))}${kv("Strike rate",f(p.r*100,p.b,1))}${kv("Ducks",n(p.du))}${kv("Fours",p.f)}${kv("Sixes",p.s)}${kv("Highest score",n(p.hs))}${kv("30s",n(p.t30))}${kv("50s",n(p.t50))}</div>
+ <div><h2>🎯 Bowling</h2>${kv("Overs bowled",ov(p.bb))}${kv("Runs conceded",p.rc)}${kv("Maidens",n(p.md))}${kv("Wickets",p.w)}${kv("Economy",f(p.rc*6,p.bb))}${kv("Best figures",p.bfw?p.bfw+"/"+p.bfr:"-")}</div></div></div>`).join("")}
 
 function vMatches(){
  if(!D.matches.length)return `<div class="card">No matches yet.</div>`;
  return [...D.matches].reverse().map(m=>`<div class="card"><div class="row"><b>${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</b>
  <span class="pill ${m.status==="live"?"live":""}">${m.status==="live"?"LIVE":"Final"}</span><span class="pill">${m.type==="test"?"Test":m.overs+" overs"}</span></div>
  ${m.inn.map(i=>`<div>${esc(m.t[i.bat].name)}: <b>${i.runs}/${i.wk}</b> <span class="mu">(${ov(i.balls)} ov)</span></div>`).join("")}
- ${m.result?`<div style="margin-top:6px"><b>${esc(m.result)}</b></div>`:""}
+ ${m.result?`<div style="margin-top:6px"><b>${esc(m.result)}</b></div>`:""}${m.pom?`<div class="mu">Player of the match: ${esc(pn(m.pom))}</div>`:""}
  <div class="row"><button onclick="go('match','${m.id}')">${admin&&m.status==="live"?"Score match":"Scorecard"}</button>${admin?`<button class="d" onclick="delM('${m.id}')">Delete match</button>`:""}</div></div>`).join("")}
 function ov(b){return Math.floor(b/6)+"."+b%6}
 
 /* ---------- players ---------- */
 function vPlayers(){
  return `<div class="card"><h2>Add player</h2><div class="row"><input id="np" placeholder="Player name"><button class="p" onclick="addP()">Add</button></div></div>
- <div class="card sc"><h2>Edit stats</h2><table><tr><th>Player</th><th>M</th><th>Runs</th><th>Balls</th><th>Outs</th><th>4s</th><th>6s</th><th>Wkts</th><th>Bowled</th><th>Conc.</th><th>Mdns</th><th>Ducks</th><th>30s</th><th>50s</th><th></th></tr>`+
- D.players.map(p=>`<tr><td>${esc(p.name)}</td>`+["m","r","b","o","f","s","w","bb","rc","md","du","t30","t50"].map(k=>`<td><input type="number" min="0" value="${p[k]||0}" onchange="ed('${p.id}','${k}',this.value)"></td>`).join("")+`<td><button class="d" onclick="delP('${p.id}')">✕</button></td></tr>`).join("")+
+ <div class="card sc"><h2>Edit stats</h2><table><tr><th>Player</th><th>M</th><th>Runs</th><th>Balls</th><th>Outs</th><th>4s</th><th>6s</th><th>Wkts</th><th>Bowled</th><th>Conc.</th><th>Mdns</th><th>Ducks</th><th>30s</th><th>50s</th><th>POM</th><th>High</th><th>Best wkts</th><th>Best runs</th><th></th></tr>`+
+ D.players.map(p=>`<tr><td>${esc(p.name)}</td>`+["m","r","b","o","f","s","w","bb","rc","md","du","t30","t50","pm","hs","bfw","bfr"].map(k=>`<td><input type="number" min="0" value="${p[k]||0}" onchange="ed('${p.id}','${k}',this.value)"></td>`).join("")+`<td><button class="d" onclick="delP('${p.id}')">✕</button></td></tr>`).join("")+
  `</table><div class="mu" style="margin-top:6px">Bowled = balls bowled; Conc. = runs conceded; Mdns = maidens. 30s = scores of 30-49, 50s = scores of 50+.</div></div>`}
-function addP(){const n=$("np").value.trim();if(!n)return;D.players.push({id:uid(),name:n,m:0,r:0,b:0,o:0,f:0,s:0,w:0,bb:0,rc:0,md:0,du:0,t30:0,t50:0});save()}
+function addP(){const n=$("np").value.trim();if(!n)return;D.players.push({id:uid(),name:n,m:0,r:0,b:0,o:0,f:0,s:0,w:0,bb:0,rc:0,md:0,du:0,t30:0,t50:0,pm:0,hs:0,bfw:0,bfr:0});save()}
 function ed(id,k,v){D.players.find(p=>p.id===id)[k]=Math.max(0,+v||0);save()}
 function delP(id){if(confirm("Delete player?")){D.players=D.players.filter(p=>p.id!==id);save()}}
 
@@ -105,12 +115,12 @@ function vMatch(){
  const m=cm();if(!m)return vMatches();
  const live=admin&&m.status==="live",i=m.inn[m.inn.length-1],bt=m.t[i.bat],bo=m.t[1-i.bat];
  let h=`<div class="card"><div class="row"><b>${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</b><span class="pill">${m.type==="test"?"Test":m.overs+" overs"}</span>${admin?`<button class="d" onclick="delM('${m.id}')">Delete match</button>`:""}</div>`;
- if(m.result)h+=`<div><b>${esc(m.result)}</b></div>`;
+ if(m.result)h+=`<div><b>${esc(m.result)}</b></div>`;if(m.pom)h+=`<div class="mu">Player of the match: <b>${esc(pn(m.pom))}</b></div>`;
  if(m.status==="live"){
   h+=`<div class="mu">Innings ${m.inn.length}: ${esc(bt.name)} batting</div><div class="big">${i.runs}/${i.wk} <span class="mu" style="font-size:16px">(${ov(i.balls)}${m.overs?" / "+m.overs:""} ov)</span></div>`;
   h+=`<div class="mu">Current run rate: <b>${i.balls?(i.runs*6/i.balls).toFixed(2):"0.00"}</b></div>`;
   if(m.type==="limited"&&m.inn.length===2){const tg=m.inn[0].runs+1-i.runs,rem=m.overs*6-i.balls;h+=`<div class="mu">${tg<=0?"Target reached":rem>0?`Need ${tg} from ${rem} balls · Required run rate: <b>${(tg*6/rem).toFixed(2)}</b>`:`Needed ${tg} more`}</div>`}
-  h+=`<div>${i.log.slice(-12).map(x=>`<span class="ball">${x}</span>`).join("")}</div>`}
+  h+=`<div class="mu">This over${i.co?` (${esc(pn(i.co.bl))}): ${i.co.r} runs, ${i.co.w} wkts`:""}</div><div>${(i.co?i.co.l:[]).map(x=>`<span class="ball">${x}</span>`).join("")||`<span class="mu">New over</span>`}</div><div class="mu">Partnership: <b>${i.pr||0}</b> (${i.pb||0} balls)</div>`}
  h+=`</div>`;
  if(live&&!i.done){
   const el=elig(m,i),ob=bt.p.filter(p=>!(i.bt[p]&&i.bt[p].out)).concat(el),sel=(k,list,ex)=>`<select onchange="pick('${k}',this.value)"><option value="">${k==="bl"?"Bowler":k==="st"?"Striker":"Non-striker"}…</option>${list.filter(p=>p!==ex).map(p=>`<option value="${p}" ${i[k]===p?"selected":""}>${esc(pn(p))}${el.includes(p)?" (bats again)":""}</option>`).join("")}</select>`;
@@ -121,8 +131,9 @@ function vMatch(){
  if(live&&(i.done||m.type==="test")){
   h+=`<div class="card"><div class="row">${m.type==="test"&&!i.done?`<button onclick="endInn()">End innings</button>`:""}
   ${i.done&&((m.type==="limited"&&m.inn.length<2)||(m.type==="test"&&m.inn.length<4))?`<button class="p" onclick="nextInn()">Start next innings</button>`:""}
-  <button class="${i.done?"p":"d"}" onclick="endM()">End match</button></div></div>`}
- if(live&&m.overs)h+=`<div class="card" style="border-color:var(--rd)"><div class="row"><button style="background:var(--rd);color:#fff;border:0;font-weight:700" onclick="dls()">DLS</button><span class="mu">Rain stopped play? Ends the match with an estimated Duckworth-Lewis result.</span></div></div>`;
+  <button class="${i.done?"p":"d"}" onclick="endPick=1;render()">End match</button></div></div>`}
+ if(live&&endPick){const all=m.t[0].p.concat(m.t[1].p),sg=suggest(m);h+=`<div class="card"><h2>End match</h2><div class="row">Player of the match <select id="pom">${all.map(id=>`<option value="${id}" ${id===sg?"selected":""}>${esc(pn(id))}</option>`).join("")}</select></div><div class="mu">Suggested from runs and wickets - change it if you like.</div><div class="row"><button class="p" onclick="endM()">Confirm end of match</button><button onclick="endPick=0;render()">Cancel</button></div></div>`}
+  if(live&&m.overs)h+=`<div class="card" style="border-color:var(--rd)"><div class="row"><button style="background:var(--rd);color:#fff;border:0;font-weight:700" onclick="dls()">DLS</button><span class="mu">Rain stopped play? Ends the match with an estimated Duckworth-Lewis result.</span></div></div>`;
   if(live){const free=D.players.filter(p=>!m.t[0].p.includes(p.id)&&!m.t[1].p.includes(p.id));
   h+=`<div class="card"><h2>Add a player to a team</h2><div class="row"><select id="mt"><option value="0">${esc(m.t[0].name)}</option><option value="1">${esc(m.t[1].name)}</option></select>
   <select id="mp"><option value="">Existing player…</option>${free.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
@@ -131,20 +142,36 @@ function vMatch(){
   h+=`<div class="card sc"><h2>Innings ${n+1} — ${esc(t.name)} ${x.runs}/${x.wk}</h2><table><tr><th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th></th></tr>`+
   Object.keys(x.bt).map(p=>{const q=x.bt[p];return `<tr><td>${esc(pn(p.split("~")[0]))}${p.includes("~")?" (1st time)":x.ret&&x.ret.includes(p)?" (2nd time)":""}</td><td>${q.r}</td><td>${q.b}</td><td>${q.f}</td><td>${q.s}</td><td>${dis(q)}</td></tr>`}).join("")+
   `</table><table style="margin-top:10px"><tr><th>Bowler (${esc(b.name)})</th><th>O</th><th>M</th><th>R</th><th>W</th></tr>`+
-  Object.keys(x.bw).map(p=>{const q=x.bw[p];return `<tr><td>${esc(pn(p))}</td><td>${ov(q.b)}</td><td>${q.md||0}</td><td>${q.r}</td><td>${q.w}</td></tr>`}).join("")+`</table></div>`});
+  Object.keys(x.bw).map(p=>{const q=x.bw[p];return `<tr><td>${esc(pn(p))}</td><td>${ov(q.b)}</td><td>${q.md||0}</td><td>${q.r}</td><td>${q.w}</td></tr>`}).join("")+`</table>${extra(x)}</div>`});
  return h}
 function delM(id){const m=D.matches.find(x=>x.id===id);if(!m||!confirm("Delete this match? This can't be undone."))return;
  if(m.status==="done"&&confirm("Also remove this match's runs, wickets and games from the player stats?\n\nOK = remove them, Cancel = keep the stats as they are.")){
   const P=id=>D.players.find(x=>x.id===id),sub=(p,k,v)=>p[k]=Math.max(0,(p[k]||0)-v);
-  m.t.forEach(t=>t.p.forEach(id=>{const p=P(id);if(p)sub(p,"m",1)}));
+  m.t.forEach(t=>t.p.forEach(id=>{const p=P(id);if(p)sub(p,"m",1)}));{const pp=P(m.pom);if(pp)sub(pp,"pm",1)}
   m.inn.forEach(i=>{Object.entries(i.bt).forEach(([id,q])=>{const p=P(id.split("~")[0]);if(p){sub(p,"r",q.r);sub(p,"b",q.b);sub(p,"f",q.f);sub(p,"s",q.s);if(q.out)sub(p,"o",1);if(q.out&&q.r===0)sub(p,"du",1);if(q.r>=50)sub(p,"t50",1);else if(q.r>=30)sub(p,"t30",1)}});
    Object.entries(i.bw).forEach(([id,q])=>{const p=P(id);if(p){sub(p,"w",q.w);sub(p,"bb",q.b);sub(p,"rc",q.r);sub(p,"md",q.md||0)}})})}
- D.matches=D.matches.filter(x=>x.id!==id);if(curId===id){curId=null;tab="matches"}save()}
+ D.matches=D.matches.filter(x=>x.id!==id);D.players.forEach(p=>{p.hs=p.bfw=p.bfr=0});best(D);if(curId===id){curId=null;tab="matches"}save()}
 function addMid(){const m=cm(),t=+$("mt").value;let id=$("mp").value;const nm=$("mn").value.trim();
- if(nm){id=uid();D.players.push({id,name:nm,m:0,r:0,b:0,o:0,f:0,s:0,w:0,bb:0,rc:0,md:0,du:0,t30:0,t50:0})}
+ if(nm){id=uid();D.players.push({id,name:nm,m:0,r:0,b:0,o:0,f:0,s:0,w:0,bb:0,rc:0,md:0,du:0,t30:0,t50:0,pm:0,hs:0,bfw:0,bfr:0})}
  if(!id)return alert("Pick a player or type a new name");m.t[t].p.push(id);save()}
 function doWk(h){const six=wkMode==="six";wkMode=0;ball(six?6:0,"",1,h)}
 function dis(q){if(!q.out)return "not out";const h=q.how||"out",by=q.by?pn(q.by):"";return h==="Bowled"?"b "+esc(by):h==="Run out"?"Run out":h==="out"?"out":h+" b "+esc(by)}
+function best(d){d.players.forEach(p=>{p.hs=p.hs||0;p.bfw=p.bfw||0;p.bfr=p.bfr||0});const P=id=>d.players.find(x=>x.id===id);
+ d.matches.filter(m=>m.status==="done").forEach(m=>m.inn.forEach(i=>{Object.entries(i.bt).forEach(([id,q])=>{const p=P(id.split("~")[0]);if(p&&q.r>p.hs)p.hs=q.r});
+  Object.entries(i.bw).forEach(([id,q])=>{const p=P(id);if(p&&(q.w>p.bfw||(q.w>0&&q.w===p.bfw&&q.r<p.bfr))){p.bfw=q.w;p.bfr=q.r}})}))}
+function suggest(m){const sc={};m.inn.forEach(i=>{Object.entries(i.bt).forEach(([id,q])=>{id=id.split("~")[0];sc[id]=(sc[id]||0)+q.r});Object.entries(i.bw).forEach(([id,q])=>sc[id]=(sc[id]||0)+q.w*20)});return Object.keys(sc).sort((a,b)=>sc[b]-sc[a])[0]||""}
+function extra(x){let h="";
+ if((x.fow||[]).length)h+=`<div style="margin-top:10px"><b>Fall of wickets</b><div class="mu">`+x.fow.map(f=>`${f.n}-${f.r} (${esc(pn(f.id))}, ${f.o} ov, partnership ${f.p} off ${f.pb} balls)`).join("; ")+`</div></div>`;
+ if(x.pr||x.pb)h+=`<div class="mu" style="margin-top:6px">Current partnership: ${x.pr||0} (${x.pb||0} balls)</div>`;
+ const o=[...(x.ovs||[])];if(x.co)o.push(Object.assign({part:1},x.co));
+ if(o.length){let c=0;h+=`<div class="sc" style="margin-top:10px"><b>Over by over</b><table><tr><th>Over</th><th>Bowler</th><th>Balls</th><th>Runs</th><th>Wkts</th><th>Total</th></tr>`+o.map((v,n)=>{c+=v.r;return `<tr><td>${n+1}${v.part?"*":""}</td><td>${esc(pn(v.bl))}</td><td style="text-align:left">${v.l.join(" ")}</td><td>${v.r}</td><td>${v.w}</td><td>${c}</td></tr>`}).join("")+`</table></div>`}
+ return h}
+function leader(ps){const lb=(t,a)=>`<div><h2>${t}</h2>${a.map((x,n)=>`<div class="kv"><span>${n+1}. ${esc(x[0])}</span><b>${x[1]}</b></div>`).join("")||`<span class="mu">No data yet</span>`}</div>`,
+ top=(f,k,asc)=>[...ps].filter(f).sort((a,b)=>asc?k(a)-k(b):k(b)-k(a)).slice(0,5);
+ return `<div class="card"><h2 style="font-size:18px">🏆 Leaderboards</h2><div class="cols">`+
+ lb("Most runs",top(p=>p.r>0,p=>p.r).map(p=>[p.name,p.r]))+lb("Most wickets",top(p=>p.w>0,p=>p.w).map(p=>[p.name,p.w]))+
+ lb("Best strike rate (6+ balls)",top(p=>p.b>=6,p=>p.r/p.b).map(p=>[p.name,(p.r*100/p.b).toFixed(1)]))+
+ lb("Best economy (1+ over)",top(p=>p.bb>=6,p=>p.rc/p.bb,1).map(p=>[p.name,(p.rc*6/p.bb).toFixed(2)]))+`</div></div>`}
 function wl(m,i){return m.wk>0?m.wk:m.t[i.bat].p.length-1}
 function elig(m,i){const R=Math.max(0,wl(m,i)-(m.t[i.bat].p.length-1));return (i.oo||[]).slice(0,R).filter(id=>!(i.ret||[]).includes(id)&&i.bt[id]&&i.bt[id].out)}
 function dls(){const m=cm();if(!m||m.status!=="live"||!m.overs)return;
@@ -167,7 +194,10 @@ function ball(r,ex,w,how){
  else{i.balls++;q.b++;b.b++;b.r+=r;i.runs+=r;q.r+=r;i.ovr=(i.ovr||0)+r;if(r===4)b.f++;if(r===6)b.s++;
   if(w){b.out=true;b.how=how||"out";b.by=i.bl;i.oo=(i.oo||[]).concat(i.st);i.wk++;if(how!=="Run out")q.w++;lb=r===6?"6W":"W";i.st=null}}
  if(!w&&r%2===1)[i.st,i.ns]=[i.ns,i.st];
- if(!ex&&i.balls%6===0){if(!i.ovr)q.md=(q.md||0)+1;i.ovr=0;[i.st,i.ns]=[i.ns,i.st];i.last=i.bl;i.bl=null}
+ const cr=ex?1+r:r;i.pr=(i.pr||0)+cr;if(!ex)i.pb=(i.pb||0)+1;
+ i.co=i.co||{bl:i.bl,r:0,w:0,l:[]};i.co.r+=cr;i.co.l.push(lb);if(w&&!ex&&how!=="Run out")i.co.w++;
+ if(w&&!ex){(i.fow=i.fow||[]).push({n:i.wk,r:i.runs,id:i.oo[i.oo.length-1],o:ov(i.balls),p:i.pr,pb:i.pb||0});i.pr=0;i.pb=0}
+ if(!ex&&i.balls%6===0){if(!i.ovr)q.md=(q.md||0)+1;i.ovr=0;i.ovs=(i.ovs||[]).concat([i.co]);i.co=null;[i.st,i.ns]=[i.ns,i.st];i.last=i.bl;i.bl=null}
  i.log.push(lb);
  const size=m.t[i.bat].p.length;
  if((m.overs&&i.balls>=m.overs*6)||i.wk>=wl(m,i)||(m.type==="limited"&&m.inn.length===2&&i.runs>m.inn[0].runs))i.done=true;
@@ -175,13 +205,13 @@ function ball(r,ex,w,how){
 function undo(){if(!hist.length)return;const m=cm();m.inn[m.inn.length-1]=JSON.parse(hist.pop());save()}
 function endInn(){lastInn().done=true;save()}
 function nextInn(){const m=cm();m.inn.push(newInn(1-lastInn().bat));hist=[];save()}
-function fin(m){
+function fin(m){if(m.pom===undefined)m.pom=suggest(m);const pp=D.players.find(x=>x.id===m.pom);if(pp)pp.pm=(pp.pm||0)+1;
  m.t.forEach(t=>t.p.forEach(id=>{const p=D.players.find(x=>x.id===id);if(p)p.m++}));
  m.inn.forEach(i=>{Object.entries(i.bt).forEach(([id,q])=>{const p=D.players.find(x=>x.id===id.split("~")[0]);if(p){p.r+=q.r;p.b+=q.b;p.f+=q.f;p.s+=q.s;if(q.out)p.o++;if(q.out&&q.r===0)p.du=(p.du||0)+1;if(q.r>=50)p.t50=(p.t50||0)+1;else if(q.r>=30)p.t30=(p.t30||0)+1}});
   Object.entries(i.bw).forEach(([id,q])=>{const p=D.players.find(x=>x.id===id);if(p){p.w+=q.w;p.bb+=q.b;p.rc+=q.r;p.md=(p.md||0)+(q.md||0)}})});
- m.status="done";save()}
+ m.status="done";best(D);save()}
 function endM(){
- const m=cm();if(!confirm("End match and update player stats?"))return;
+ const m=cm();m.pom=$("pom")?$("pom").value:suggest(m);endPick=0;
  const tot=[0,0];m.inn.forEach(i=>tot[i.bat]+=i.runs);const L=m.inn[m.inn.length-1];
  if(tot[0]===tot[1])m.result=m.type==="test"?"Match drawn":"Match tied";
  else{const w=tot[0]>tot[1]?0:1;m.result=`${m.t[w].name} won by `+(L.bat===w&&m.inn.length>1&&L.done&&L.runs>m.inn[m.inn.length-2].runs&&m.type==="limited"?`${wl(m,L)-L.wk} wickets`:`${Math.abs(tot[0]-tot[1])} runs`)}
