@@ -29,7 +29,7 @@ input[type=number]{width:70px}.kv{display:flex;justify-content:space-between;pad
 const USER="holiday",PASS="holiday123";
 /* Paste your Firebase Realtime Database URL between the quotes, e.g. "https://my-cricket-default-rtdb.firebaseio.com" */
 const DB_URL="";
-const DB=DB_URL.replace(/\/$/,"");let status="",lastSave=0,endPick=0;
+const DB=DB_URL.replace(/\/$/,"");let status="",lastSave=0,endPick=0,prof=null,cat="Batting";
 let D={players:[],matches:[]},admin=false,tab="stats",curId=null,setup=null,ref=null,hist=[],dbOk=false,nbMode=false,wkMode=0;
 const $=s=>document.getElementById(s),uid=()=>Math.random().toString(36).slice(2,9);
 const pn=id=>(D.players.find(p=>p.id===id)||{name:"?"}).name;
@@ -53,7 +53,7 @@ function render(){
  $("nav").innerHTML=t.map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+
   (admin?`<button onclick="exportData()">⬇ Export data.json</button>`:"")+`<button onclick="${admin?"logout()":"login()"}">${admin?"Log out":"Admin login"}</button>`;
  $("app").innerHTML=(admin?(DB?`<div class="card mu">Autosave is on. <span id="st">${status}</span> <button onclick="save()">Save now</button> <button onclick="exportData()">Export data.json</button></div>`:`<div class="card mu">Changes are saved in this browser only. When you are done, press Export, upload the downloaded <b>data.json</b> to your GitHub repo (replace the old one) and everyone will see it. <div class="row"><button class="p" onclick="exportData()">Export data.json</button><button class="d" onclick="resetLocal()">Discard local changes</button></div></div>`):"")+
-  ({stats:vStats,matches:vMatches,players:vPlayers,new:vNew,match:vMatch,login:vLogin}[tab]||vStats)();
+  ({stats:vStats,matches:vMatches,players:vPlayers,new:vNew,match:vMatch,login:vLogin,player:vProfile}[tab]||vStats)();
 }
 function go(t,id){tab=t;if(id)curId=id;if(t==="new"&&!setup)setup={type:"limited",overs:20,a:"Team A",b:"Team B",A:[],B:[],first:0};render()}
 function login(){tab="login";render()}
@@ -66,9 +66,9 @@ function vStats(){
  const ps=[...D.players].sort((a,b)=>b.r-a.r);
  if(!ps.length)return `<div class="card">No players yet.${admin?"":" An admin can add players after logging in."}</div>`;
  const f=(a,b,d=2)=>b?(a/b).toFixed(d):"-",n=x=>x||0,kv=(l,v)=>`<div class="kv"><span class="mu">${l}</span><b>${v}</b></div>`;
- return leader(ps)+ps.map(p=>`<div class="card"><div class="row"><b style="font-size:17px">${esc(p.name)}</b><span class="pill">${p.m} matches</span><span class="pill">${n(p.pm)} player of the match</span></div><div class="cols">
+ return leader(ps)+ps.map(p=>`<div class="card" style="cursor:pointer" onclick="openP('${p.id}')"><div class="row"><b style="font-size:17px">${esc(p.name)}</b><span class="pill">${p.m} matches</span><span class="pill">${n(p.pm)} player of the match</span></div><div class="cols">
  <div><h2>🏏 Batting</h2>${kv("Runs",p.r)}${kv("Balls faced",p.b)}${kv("Average",f(p.r,p.o))}${kv("Strike rate",f(p.r*100,p.b,1))}${kv("Ducks",n(p.du))}${kv("Fours",p.f)}${kv("Sixes",p.s)}${kv("Highest score",n(p.hs))}${kv("30s",n(p.t30))}${kv("50s",n(p.t50))}</div>
- <div><h2>🎯 Bowling</h2>${kv("Overs bowled",ov(p.bb))}${kv("Runs conceded",p.rc)}${kv("Maidens",n(p.md))}${kv("Wickets",p.w)}${kv("Economy",f(p.rc*6,p.bb))}${kv("Best figures",p.bfw?p.bfw+"/"+p.bfr:"-")}</div></div></div>`).join("")}
+ <div><h2>🎯 Bowling</h2>${kv("Overs bowled",ov(p.bb))}${kv("Runs conceded",p.rc)}${kv("Maidens",n(p.md))}${kv("Wickets",p.w)}${kv("Economy",f(p.rc*6,p.bb))}${kv("Best figures",p.bfw?p.bfw+"/"+p.bfr:"-")}</div></div><div class="mu" style="text-align:right;margin-top:8px">Click player for more info ›</div></div>`).join("")}
 
 function vMatches(){
  if(!D.matches.length)return `<div class="card">No matches yet.</div>`;
@@ -173,6 +173,16 @@ function leader(ps){const lb=(t,a)=>`<div><h2>${t}</h2>${a.map((x,n)=>`<div clas
  lb("Most runs",top(p=>p.r>0,p=>p.r).map(p=>[p.name,p.r]))+lb("Most wickets",top(p=>p.w>0,p=>p.w).map(p=>[p.name,p.w]))+
  lb("Best strike rate (6+ balls)",top(p=>p.b>=6,p=>p.r/p.b).map(p=>[p.name,(p.r*100/p.b).toFixed(1)]))+
  lb("Best economy (1+ over)",top(p=>p.bb>=6,p=>p.rc/p.bb,1).map(p=>[p.name,(p.rc*6/p.bb).toFixed(2)]))+`</div></div>`}
+function openP(id){prof=id;cat="Batting";tab="player";render();window.scrollTo(0,0)}
+function vProfile(){const p=D.players.find(x=>x.id===prof);if(!p){tab="stats";return vStats()}
+ const bat=cat==="Batting",ho={Bowled:"b",Caught:"c",LBW:"lbw",Stumped:"st","Run out":"ro","Hit wicket":"hw"};let rows="";
+ [...D.matches].reverse().filter(m=>m.status==="done"&&m.t.some(t=>t.p.includes(p.id))).forEach(m=>{
+  const nm=`<td><a href="#" onclick="go('match','${m.id}');return false" style="color:var(--ac);font-weight:600;text-decoration:none">${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</a></td>`;let n=0,r="";
+  m.inn.forEach(i=>{if(bat)Object.entries(i.bt).filter(([k])=>k.split("~")[0]===p.id).forEach(([k,q])=>{n++;r+=`<tr>${nm}<td>${n}</td><td><b>${q.r}</b></td><td>${q.b}</td><td>${q.f}</td><td>${q.s}</td><td>${q.b?+(q.r*100/q.b).toFixed(2):0}</td><td>${q.out?(ho[q.how]||"out"):"no"}</td></tr>`});
+   else if(i.bw[p.id]){const q=i.bw[p.id];n++;r+=`<tr>${nm}<td>${n}</td><td>${ov(q.b)}</td><td>${q.md||0}</td><td>${q.r}</td><td><b>${q.w}</b></td><td>${q.b?(q.r*6/q.b).toFixed(2):"0"}</td></tr>`}});
+  rows+=r||`<tr>${nm}<td colspan="${bat?7:6}" style="text-align:center">${bat?"Did not bat":"Did not bowl"}</td></tr>`});
+ return `<div class="row"><button onclick="go('stats')">‹ Back</button><b style="font-size:18px">${esc(p.name)}</b></div><div class="card"><div class="row"><b>Category</b><select onchange="cat=this.value;render()"><option ${bat?"selected":""}>Batting</option><option ${bat?"":"selected"}>Bowling</option></select></div>
+ <div class="sc">${rows?`<table><tr><th>Match</th><th>Inn</th>${bat?"<th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th><th>HO</th>":"<th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th>"}</tr>${rows}</table>`:`<div class="mu">No finished matches yet.</div>`}</div></div>`}
 function wl(m,i){return m.wk>0?m.wk:m.t[i.bat].p.length-1}
 function elig(m,i){const R=Math.max(0,wl(m,i)-(m.t[i.bat].p.length-1));return (i.oo||[]).slice(0,R).filter(id=>!(i.ret||[]).includes(id)&&i.bt[id]&&i.bt[id].out)}
 function dls(){const m=cm();if(!m||m.status!=="live"||!m.overs)return;
