@@ -177,10 +177,10 @@ function openP(id){prof=id;cat="Batting";tab="player";render();window.scrollTo(0
 function vProfile(){const p=D.players.find(x=>x.id===prof);if(!p){tab="stats";return vStats()}
  const bat=cat==="Batting",ho={Bowled:"b",Caught:"c",LBW:"lbw",Stumped:"st","Run out":"ro","Hit wicket":"hw"};let rows="";
  [...D.matches].reverse().filter(m=>m.status==="done"&&m.t.some(t=>t.p.includes(p.id))).forEach(m=>{
-  const nm=`<td><a href="#" onclick="go('match','${m.id}');return false" style="color:var(--ac);font-weight:600;text-decoration:none">${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</a></td>`;let n=0,r="";
-  m.inn.forEach(i=>{if(bat)Object.entries(i.bt).filter(([k])=>k.split("~")[0]===p.id).forEach(([k,q])=>{n++;r+=`<tr>${nm}<td>${n}</td><td><b>${q.r}</b></td><td>${q.b}</td><td>${q.f}</td><td>${q.s}</td><td>${q.b?+(q.r*100/q.b).toFixed(2):0}</td><td>${q.out?(ho[q.how]||"out"):"no"}</td></tr>`});
-   else if(i.bw[p.id]){const q=i.bw[p.id];n++;r+=`<tr>${nm}<td>${n}</td><td>${ov(q.b)}</td><td>${q.md||0}</td><td>${q.r}</td><td><b>${q.w}</b></td><td>${q.b?(q.r*6/q.b).toFixed(2):"0"}</td></tr>`}});
-  rows+=r||`<tr>${nm}<td colspan="${bat?7:6}" style="text-align:center">${bat?"Did not bat":"Did not bowl"}</td></tr>`});
+  const nm=`<td><a href="#" onclick="go('match','${m.id}');return false" style="color:var(--ac);font-weight:600;text-decoration:none">${esc(m.t[0].name)} vs ${esc(m.t[1].name)}</a></td>`,es=[];
+  m.inn.forEach(i=>{if(bat)Object.entries(i.bt).filter(([k])=>k.split("~")[0]===p.id).forEach(([k,q])=>es.push([es.length+1,`<b>${q.r}</b>`,q.b,q.f,q.s,q.b?+(q.r*100/q.b).toFixed(2):0,q.out?(ho[q.how]||"out"):"no"]));
+   else if(i.bw[p.id]){const q=i.bw[p.id];es.push([es.length+1,ov(q.b),q.md||0,q.r,`<b>${q.w}</b>`,q.b?+(q.r*6/q.b).toFixed(2):0])}});
+  rows+=es.length?`<tr>${nm}${es[0].map((_,j)=>`<td>${es.map(e=>e[j]).join("<br>")}</td>`).join("")}</tr>`:`<tr>${nm}<td colspan="${bat?7:6}" style="text-align:center">${bat?"Did not bat":"Did not bowl"}</td></tr>`});
  return `<div class="row"><button onclick="go('stats')">‹ Back</button><b style="font-size:18px">${esc(p.name)}</b></div><div class="card"><div class="row"><b>Category</b><select onchange="cat=this.value;render()"><option ${bat?"selected":""}>Batting</option><option ${bat?"":"selected"}>Bowling</option></select></div>
  <div class="sc">${rows?`<table><tr><th>Match</th><th>Inn</th>${bat?"<th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th><th>HO</th>":"<th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th>"}</tr>${rows}</table>`:`<div class="mu">No finished matches yet.</div>`}</div></div>`}
 function wl(m,i){return m.wk>0?m.wk:m.t[i.bat].p.length-1}
