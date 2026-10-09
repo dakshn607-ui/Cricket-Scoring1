@@ -225,7 +225,8 @@ function endM(){
  const m=cm();m.pom=$("pom")?$("pom").value:suggest(m);endPick=0;
  const tot=[0,0];m.inn.forEach(i=>tot[i.bat]+=i.runs);const L=m.inn[m.inn.length-1];
  if(m.inn.length<2||m.inn[1].balls===0)m.result="No result";
- else if(tot[0]===tot[1])m.result=m.type==="test"?"Match drawn":"Match tied";
- else{const w=tot[0]>tot[1]?0:1;m.result=`${m.t[w].name} won by `+(L.bat===w&&m.inn.length>1&&L.done&&L.runs>m.inn[m.inn.length-2].runs&&m.type==="limited"?`${wl(m,L)-L.wk} wickets`:`${Math.abs(tot[0]-tot[1])} runs`)}
+ else if(m.type==="test"&&!(m.inn.length===4&&(L.done||tot[L.bat]>tot[1-L.bat])))m.result="Match drawn";
+ else if(tot[0]===tot[1])m.result="Match tied";
+ else{const w=tot[0]>tot[1]?0:1;m.result=`${m.t[w].name} won by `+(L.bat===w&&(m.type==="test"?m.inn.length===4:m.inn.length>1&&L.done&&L.runs>m.inn[m.inn.length-2].runs)?`${wl(m,L)-L.wk} wickets`:`${Math.abs(tot[0]-tot[1])} runs`)}
  fin(m)}
 </script></body></html>
